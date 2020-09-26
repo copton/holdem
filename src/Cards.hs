@@ -26,7 +26,10 @@ data Suit
     | Spades
     | Diamonds
     | Clubs
-    deriving (Show, Eq, Ord)
+    deriving (Show, Eq)
+
+instance Ord Suit where
+    compare _ _ = EQ
 
 data Card = Card
     { cardKind :: Kind
