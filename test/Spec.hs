@@ -1,2 +1,8 @@
+import Test.Tasty
+
+import qualified TestHands as TestHands
+
 main :: IO ()
-main = putStrLn "Test suite not yet implemented"
+main = defaultMain $ testGroup "holdem tests"
+    [ TestHands.tests
+    ]
