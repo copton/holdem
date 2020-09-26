@@ -49,4 +49,9 @@ combinationTests =
       , CFourOfAKind (FourOfAKind King)
       , LT
       )
+    , ( "Chop"
+      , CFullHouse (FullHouse King Queen)
+      , CFullHouse (FullHouse King Queen)
+      , EQ
+      )
     ]
