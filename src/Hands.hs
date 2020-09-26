@@ -1,9 +1,20 @@
-module Hands where
+module Hands (
+    Combination(..)
+  , OrderedDesc -- | not exporting constructor
+  , orderedDesc
+  , HighCard(..)
+  , Pair(..)
+  , TwoPair(..)
+  , ThreeOfAKind(..)
+  , Straight(..)
+  , Flush(..)
+  , FullHouse(..)
+  , FourOfAKind(..)
+  , StraightFlush(..)
+) where
 
 import Cards
-
-data Hand = Hand [Card]
-    deriving (Show, Eq)
+import Data.List (sort)
 
 data Combination
     = CHighCard HighCard
@@ -29,28 +40,33 @@ rank c = case c of
     CFourOfAKind   _ -> 7
     CStraightFlush _ -> 8
 
+newtype OrderedDesc a = OrderedDesc { unOrderedDesc :: [a] }
+    deriving (Show, Eq, Ord)
+
+orderedDesc :: Ord a => [a] -> OrderedDesc a
+orderedDesc = OrderedDesc . reverse . sort
 
 data HighCard = HighCard
-    { hcOrdered :: [Kind] -- | highest to lowest
+    { hcOrdered :: OrderedDesc Kind
     }
     deriving (Show, Eq, Ord)
 
 data Pair = Pair
     { pairKind     :: Kind
-    , pairKicker   :: [Kind] -- | highest to lowest
+    , pairKicker   :: OrderedDesc Kind
     }
     deriving (Show, Eq, Ord)
 
 data TwoPair = TwoPair
     { twoPairHighPair :: Kind
     , twoPairLowPair  :: Kind
-    , twoPairKicker   :: [Kind] -- | highest to lowest
+    , twoPairKicker   :: OrderedDesc Kind
     }
     deriving (Show, Eq, Ord)
 
 data ThreeOfAKind = ThreeOfAKind
     { threeOfAKindKind   :: Kind
-    , threeOfAKindKicker :: [Kind] -- | highest to lowest
+    , threeOfAKindKicker :: OrderedDesc Kind
     }
     deriving (Show, Eq, Ord)
 
@@ -91,8 +107,3 @@ instance Ord Combination where
     compare (CFourOfAKind left  ) (CFourOfAKind right  ) = compare left right
     compare (CStraightFlush left) (CStraightFlush right) = compare left right
     compare left right = compare (rank left) (rank right)
-
-instance Ord Hand where
-    compare lhand rhand = EQ
-
-

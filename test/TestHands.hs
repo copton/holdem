@@ -35,13 +35,13 @@ flipCombinationTest (label, left, right, res) =
 combinationTests :: [CombinationTest]
 combinationTests =
     [ ( "Ace high"
-      , CHighCard (HighCard [Ace, King, Queen, Nine, Five])
-      , CHighCard (HighCard [King, Queen, Seven, Three, Two])
+      , CHighCard (HighCard $ orderedDesc [Ace, King, Queen, Nine, Five])
+      , CHighCard (HighCard $ orderedDesc [King, Queen, Seven, Three, Two])
       , GT
       )
     , ( "Kicker"
-      , CPair (Pair King [Ace, Four, Three])
-      , CPair (Pair King [Ten, Seven, Five])
+      , CPair (Pair King $ orderedDesc [Ace, Four, Three])
+      , CPair (Pair King $ orderedDesc [Ten, Seven, Five])
       , GT
       )
     , ( "Cooler"
