@@ -4,54 +4,48 @@ module TestHands (
 
 import Test.Tasty
 import Test.Tasty.HUnit 
-import Data.Maybe (mapMaybe)
 
 import Hands
 import Cards
+import Combinations
 
 tests :: TestTree
-tests = testGroup "hands tests" $
-    [ testGroup "combinations" $
-        map runCombinationTest $
-               combinationTests
-            ++ mapMaybe flipCombinationTest combinationTests
+tests = testGroup "hands tests" [
+    testGroup "five cards" $ map runHandTest handTestsFiveCards
     ]
 
-type CombinationTest = (String, Combination, Combination, Ordering)
+type HandTest = (String, [Card] -> Maybe Combination, [Card], Maybe Combination)
 
-runCombinationTest :: CombinationTest -> TestTree
-runCombinationTest (label, left, right, result) = testCase label $
-    result @=? compare left right 
+runHandTest :: HandTest -> TestTree
+runHandTest (label, f, cards, result) =
+    testCase label $
+        result @=? f cards
 
-flipCombinationTest :: CombinationTest -> Maybe CombinationTest
-flipCombinationTest (_, _, _, EQ) = Nothing
-flipCombinationTest (label, left, right, res) =
-      Just (label ++ " flipped", right, left, flipRes res)
-    where
-        flipRes GT = LT
-        flipRes LT = GT
-        flipRes EQ = EQ
-
-combinationTests :: [CombinationTest]
-combinationTests =
-    [ ( "Ace high"
-      , CHighCard (HighCard $ orderedDesc [Ace, King, Queen, Nine, Five])
-      , CHighCard (HighCard $ orderedDesc [King, Queen, Seven, Three, Two])
-      , GT
+handTestsFiveCards :: [HandTest]
+handTestsFiveCards =
+    [ ( "Flush"
+      , isFlush
+      , [ Card King Clubs, Card Ten Clubs, Card Eight Clubs
+        , Card Ace Clubs, Card Two Clubs
+        ]
+      , Just $ CFlush $ Flush $ orderDesc [King, Ten, Eight, Ace, Two]
       )
-    , ( "Kicker"
-      , CPair (Pair King $ orderedDesc [Ace, Four, Three])
-      , CPair (Pair King $ orderedDesc [Ten, Seven, Five])
-      , GT
+    , ( "not a Flush"
+      , isFlush
+      , [ Card King Hearts, Card Ten Clubs, Card Eight Clubs
+        , Card Ace Clubs, Card Two Clubs]
+      , Nothing
       )
-    , ( "Cooler"
-      , CFullHouse (FullHouse King Queen)
-      , CFourOfAKind (FourOfAKind King)
-      , LT
+    , ( "Straight"
+      , isStraight
+      , [ Card King Hearts, Card Nine Clubs, Card Jack Clubs
+        , Card Ten Diamonds, Card Queen Hearts]
+      , Just $ CStraight $ Straight King
       )
-    , ( "Chop"
-      , CFullHouse (FullHouse King Queen)
-      , CFullHouse (FullHouse King Queen)
-      , EQ
+    , ( "not a Straight"
+      , isStraight
+      , [ Card Ace Hearts, Card Nine Clubs, Card Jack Clubs
+        , Card Ten Diamonds, Card Queen Hearts]
+      , Nothing
       )
     ]

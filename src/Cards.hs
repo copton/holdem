@@ -19,10 +19,10 @@ data Kind
     | Queen
     | King
     | Ace
-    deriving (Show, Eq, Ord)
+    deriving (Show, Eq, Ord, Enum)
 
 data Suit
-    = Heards
+    = Hearts
     | Spades
     | Diamonds
     | Clubs
