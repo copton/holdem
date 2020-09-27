@@ -29,7 +29,11 @@ isStraightFlush, isFourOfAKind, isFullHouse, isFlush
                , isStraight, isThreeOfAKind, isTwoPair , isPair
                :: [Card] -> Maybe Combination
 
-isStraightFlush hand = Nothing
+isStraightFlush hand = do
+    (CStraight straight) <- isStraight hand
+    isFlush hand
+    return $ CStraightFlush $ StraightFlush $ straightKind straight
+
 isFourOfAKind hand = Nothing
 isFullHouse hand = Nothing
 
