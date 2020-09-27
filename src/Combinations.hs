@@ -1,8 +1,6 @@
 {-# LANGUAGE DeriveFunctor #-}
 module Combinations (
     Combination(..)
-  , OrderedDesc -- | not exporting constructor
-  , orderDesc
   , HighCard(..)
   , Pair(..)
   , TwoPair(..)
@@ -41,33 +39,34 @@ rank c = case c of
     CFourOfAKind   _ -> 7
     CStraightFlush _ -> 8
 
-newtype OrderedDesc a = OrderedDesc { unOrderedDesc :: [a] }
-    deriving (Show, Eq, Ord, Functor)
-
-orderDesc :: Ord a => [a] -> OrderedDesc a
-orderDesc = OrderedDesc . reverse . sort
-
-data HighCard = HighCard
-    { highCardOrdered :: OrderedDesc Kind
+data HighCard = HighCard -- | ordered by rank of kind
+    { highCard1 :: Kind
+    , highCard2 :: Kind
+    , highCard3 :: Kind
+    , highCard4 :: Kind
+    , highCard5 :: Kind
     }
     deriving (Show, Eq, Ord)
 
-data Pair = Pair
-    { pairKind     :: Kind
-    , pairKicker   :: OrderedDesc Kind
+data Pair = Pair -- | ordered by rank of kind
+    { pairKind    :: Kind
+    , pairKicker1 :: Kind
+    , pairKicker2 :: Kind
+    , pairKicker3 :: Kind
     }
     deriving (Show, Eq, Ord)
 
-data TwoPair = TwoPair
+data TwoPair = TwoPair -- | ordered by rank of kind
     { twoPairHighPair :: Kind
     , twoPairLowPair  :: Kind
-    , twoPairKicker   :: OrderedDesc Kind
+    , twoPairKicker   :: Kind
     }
     deriving (Show, Eq, Ord)
 
-data ThreeOfAKind = ThreeOfAKind
-    { threeOfAKindKind   :: Kind
-    , threeOfAKindKicker :: OrderedDesc Kind
+data ThreeOfAKind = ThreeOfAKind -- | ordered by rank of kind
+    { threeOfAKindKind    :: Kind
+    , threeOfAKindKicker1 :: Kind
+    , threeOfAKindKicker2 :: Kind
     }
     deriving (Show, Eq, Ord)
 
@@ -76,8 +75,12 @@ data Straight = Straight
     }
     deriving (Show, Eq, Ord)
 
-data Flush = Flush
-    { flushOrdered :: OrderedDesc Kind
+data Flush = Flush -- | ordered by rank of kind
+    { flush1 :: Kind
+    , flush2 :: Kind
+    , flush3 :: Kind
+    , flush4 :: Kind
+    , flush5 :: Kind
     }
     deriving (Show, Eq, Ord)
 
@@ -88,7 +91,8 @@ data FullHouse = FullHouse
     deriving (Show, Eq, Ord)
 
 data FourOfAKind = FourOfAKind
-    { fourOfAKindKind :: Kind
+    { fourOfAKindKind   :: Kind
+    , fourOfAKindKicker :: Kind
     }
     deriving (Show, Eq, Ord)
 

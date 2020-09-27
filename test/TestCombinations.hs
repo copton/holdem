@@ -34,18 +34,18 @@ flipCombinationTest (label, left, right, res) =
 combinationTests :: [CombinationTest]
 combinationTests =
     [ ( "Ace high"
-      , CHighCard (HighCard $ orderDesc [Ace, King, Queen, Nine, Five])
-      , CHighCard (HighCard $ orderDesc [King, Queen, Seven, Three, Two])
+      , CHighCard $ HighCard Ace King Queen Nine Five
+      , CHighCard $ HighCard King Queen Seven Three Two
       , GT
       )
     , ( "Kicker"
-      , CPair (Pair King $ orderDesc [Ace, Four, Three])
-      , CPair (Pair King $ orderDesc [Ten, Seven, Five])
+      , CPair $ Pair King Ace Four Three
+      , CPair $ Pair King Ten Seven Five
       , GT
       )
     , ( "Cooler"
       , CFullHouse (FullHouse King Queen)
-      , CFourOfAKind (FourOfAKind King)
+      , CFourOfAKind (FourOfAKind King Jack)
       , LT
       )
     , ( "Chop"
@@ -54,8 +54,8 @@ combinationTests =
       , EQ
       )
     , ( "Flush vs Flush"
-      , CFlush (Flush $ orderDesc [Ace, King, Queen, Nine, Five])
-      , CFlush (Flush $ orderDesc [King, Queen, Seven, Three, Two])
+      , CFlush $ Flush Ace King Queen Nine Five
+      , CFlush $ Flush King Queen Seven Three Two
       , GT
       )
     ]
