@@ -26,7 +26,7 @@ data Suit
     | Spades
     | Diamonds
     | Clubs
-    deriving (Show, Eq)
+    deriving (Show, Eq, Enum)
 
 instance Ord Suit where
     compare _ _ = EQ

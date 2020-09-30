@@ -29,6 +29,7 @@ library
   exposed-modules:
       Cards
       Hands
+      Combinations
   other-modules:
       Paths_holdem
   hs-source-dirs:
@@ -55,6 +56,8 @@ test-suite holdem-test
   main-is: Spec.hs
   other-modules:
       TestHands
+      TestCombinations
+      PropHands
       Paths_holdem
   hs-source-dirs:
       test
@@ -64,4 +67,6 @@ test-suite holdem-test
     , holdem
     , tasty == 1.2.*
     , tasty-hunit == 0.10.*
+    , tasty-smallcheck == 0.8.*
+    , smallcheck == 1.1.*
   default-language: Haskell2010
