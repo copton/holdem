@@ -20,8 +20,10 @@ import qualified Data.IntMap as IM
 
 import Combinations
 import Cards
+import EnumExtra
 
 newtype Hand = Hand { getHand :: [Card] }
+    deriving Show
 
 asHand :: [Card] -> Maybe Hand
 asHand cards = if length cards >= 5 then Just (Hand cards) else Nothing
@@ -29,7 +31,7 @@ asHand cards = if length cards >= 5 then Just (Hand cards) else Nothing
 bestCombination :: Hand -> Combination
 bestCombination hand = bestCombo `orElse` highCard
     where
-        bestCombo = getFirst $ mconcat $ map First $ possibleCombos
+        bestCombo = (getFirst . mconcat . map First) possibleCombos
 
         possibleCombos = 
             [ isStraightFlush hand
@@ -80,16 +82,17 @@ isFlush (Hand cards) = fmap CFlush $
         (kind1 : kind2 : kind3 : kind4 : kind5 : _) = reverse $ sort kinds
 
 isStraight hand = fmap CStraight $
-    case orderedRanks of
-        (high : _ )
-            | high >= 5 && orderedRanks == expectedRanks high
-            -> Just $ Straight (toEnum high)
+    case reverse (sort kinds) of
+        (Ace : high : rest)
+            | high : rest == reverse [Two .. Five]
+            -> Just $ Straight high
+        (high : rest)
+            | high >= Six && high : rest == expected high
+            -> Just $ Straight high
         _   -> Nothing
     where
         kinds = map cardKind (getHand hand)
-        orderedRanks = map fromEnum (reverse $ sort kinds)
-        expectedRanks high = reverse [high-4 .. high]
-
+        expected high = reverse $ enumFromToLeftRel high 4
 
 isThreeOfAKind (Hand cards) = fmap CThreeOfAKind $
     case histogram cards of

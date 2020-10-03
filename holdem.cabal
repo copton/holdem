@@ -30,6 +30,7 @@ library
       Cards
       Hands
       Combinations
+      EnumExtra
   other-modules:
       Paths_holdem
   hs-source-dirs:
@@ -57,7 +58,7 @@ test-suite holdem-test
   other-modules:
       TestHands
       TestCombinations
-      PropHands
+      QuickPropHands
       Paths_holdem
   hs-source-dirs:
       test
@@ -67,6 +68,7 @@ test-suite holdem-test
     , holdem
     , tasty == 1.2.*
     , tasty-hunit == 0.10.*
-    , tasty-smallcheck == 0.8.*
-    , smallcheck == 1.1.*
+    , tasty-quickcheck == 0.10.*
+    , QuickCheck == 2.13.*
+    , lens == 4.18.*
   default-language: Haskell2010

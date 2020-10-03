@@ -2,11 +2,11 @@ import Test.Tasty
 
 import qualified TestCombinations as TestCombinations
 import qualified TestHands as TestHands
-import qualified PropHands as PropHands
+import qualified QuickPropHands as QuickPropHands
 
 main :: IO ()
 main = defaultMain $ testGroup "holdem tests"
     [ TestCombinations.tests
     , TestHands.tests
-    , PropHands.tests
+    , QuickPropHands.tests
     ]

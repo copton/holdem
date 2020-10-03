@@ -58,6 +58,13 @@ handTestsFiveCards =
         ]
       , Just $ CFlush $ Flush Ace King Ten Eight Two
       )
+    , ( "Low Straight Flush"
+      , isStraightFlush
+      , [ Card Ace Hearts, Card Two Hearts, Card Four Hearts
+        , Card Five Hearts, Card Three Hearts
+        ]
+      , Just $ CStraightFlush $ StraightFlush Five
+      )
     , ( "not a Flush"
       , isFlush
       , [ Card King Hearts, Card Ten Clubs, Card Eight Clubs
@@ -70,6 +77,12 @@ handTestsFiveCards =
         , Card Ten Diamonds, Card Queen Hearts]
       , Just $ CStraight $ Straight King
       )
+    , ( "Low Straight"
+      , isStraight
+      , [ Card Ace Hearts, Card Three Clubs, Card Two Clubs
+        , Card Five Diamonds, Card Four Hearts]
+      , Just $ CStraight $ Straight Five
+      )
     , ( "not a Straight"
       , isStraight
       , [ Card Ace Hearts, Card Nine Clubs, Card Jack Clubs
@@ -81,6 +94,20 @@ handTestsFiveCards =
       , [ Card King Clubs, Card Nine Clubs, Card Jack Clubs
         , Card Ten Clubs, Card Queen Clubs]
       , Just $ CStraightFlush $ StraightFlush King
+      )
+    , ( "Straight 2"
+      , isStraight
+      , [ Card Three Hearts, Card Two Hearts, Card Four Hearts
+        , Card Five Hearts, Card Six Hearts
+        ]
+      , Just $ CStraight $ Straight Six
+      )
+    , ( "Straight Flush 2"
+      , isStraightFlush
+      , [ Card Three Hearts, Card Two Hearts, Card Four Hearts
+        , Card Five Hearts, Card Six Hearts
+        ]
+      , Just $ CStraightFlush $ StraightFlush Six
       )
     , ( "not a Straight Flush"
       , isStraightFlush

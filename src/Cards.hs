@@ -19,14 +19,14 @@ data Kind
     | Queen
     | King
     | Ace
-    deriving (Show, Eq, Ord, Enum)
+    deriving (Show, Eq, Ord, Enum, Bounded)
 
 data Suit
     = Hearts
     | Spades
     | Diamonds
     | Clubs
-    deriving (Show, Eq, Enum)
+    deriving (Show, Eq, Enum, Bounded)
 
 instance Ord Suit where
     compare _ _ = EQ
