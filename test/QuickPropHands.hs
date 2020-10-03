@@ -1,4 +1,5 @@
 {-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE RankNTypes #-}
 module QuickPropHands (
     tests
@@ -8,10 +9,12 @@ import Test.Tasty (TestTree, testGroup)
 import Test.Tasty.QuickCheck (testProperty)
 import Test.QuickCheck ( (==>), Property, Arbitrary(arbitrary)
                        , arbitraryBoundedEnum, applyArbitrary2
-                       , counterexample)
+                       , counterexample, Gen, discard, forAll, shuffle)
 import Data.Maybe (fromJust)
 import Control.Lens (makePrisms, has, Prism')
 import Data.List (nub, sort)
+import Control.Monad (replicateM, unless)
+import Debug.Trace (trace)
 
 import Cards
 import Hands
@@ -32,6 +35,7 @@ $(makePrisms ''Combination)
 tests :: TestTree
 tests = testGroup "hands properties"
     [ testProperty "Straight Flush" propStraightFlush
+    , testProperty "Low Straight Flush" propLowStraightFlush
     , testProperty "Four of a Kind" propFourOfAKind
     , testProperty "Full House" propFullHouse
     , testProperty "Flush" propFlush
@@ -43,125 +47,159 @@ tests = testGroup "hands properties"
     , testProperty "High Card" propHighCard
     ]
 
-propHighCard
-    :: Card
-    -> Card
-    -> Card
-    -> Card
-    -> Card
-    -> Property
-propHighCard c1 c2 c3 c4 c5 =
-       length (nub cards) == 5 -- no duplicate cards
-    && length (nub suits) > 1  -- no flush
-    && length (nub kinds) == 5  -- no pair, three or four of a kind
-    && notAStraight kinds
-    ==> isCombination _CHighCard cards
+propHighCard :: Property
+propHighCard = forAll gen (isCombination _CHighCard)
     where
-        cards = [c1, c2, c3, c4, c5]
-        kinds = map cardKind cards
-        suits = map cardSuit cards
+        gen = do
+            cards <- replicateM 5 arbitrary
+            let kinds = map cardKind cards
+            let suits = map cardSuit cards
+            if   (length (nub cards) == 5) -- no duplicate cards
+              && (length (nub suits) > 1)  -- no flush
+              && (length (nub kinds) == 5) -- no pair, three or four of a kind
+              && (notAStraight kinds)
+                then shuffle cards
+                else discard
 
-propPair
-    :: Kind
-    -> Suit
-    -> Suit
-    -> Card
-    -> Card
-    -> Card
-    -> Property
-propPair k s1 s2 kicker1 kicker2 kicker3 =
-       length (nub cards) == 5 -- no duplicate cards
-    && length (nub suits) > 1  -- no flush
-    && length (nub kinds) >= 4  -- nothing higher than a pair
-    ==> isCombination _CPair cards
+propPair :: Property
+propPair = forAll gen (isCombination _CPair)
     where
-        kickers = [kicker1, kicker2, kicker3]
-        cards = Card k s1 : Card k s2 : kickers
-        kinds = k : map cardKind kickers
-        suits = s1 : s2 : map cardSuit kickers
+        gen = do
+            kind <- arbitrary
+            suits <- replicateM 2 arbitrary
+            kickers <- replicateM 3 arbitrary
+            let cards = map (Card kind) suits ++ kickers
+            let suits = map cardSuit cards
+            let kinds = map cardKind cards
+            if  length (nub cards) == 5 -- no duplicate cards
+             && length (nub suits) > 1  -- no flush
+             && length (nub kinds) >= 4  -- nothing higher than a pair
+                then shuffle cards
+                else discard
 
-propTwoPair
-    :: Kind
-    -> Suit
-    -> Suit
-    -> Kind
-    -> Suit
-    -> Suit
-    -> Card
-    -> Property
-propTwoPair k1 s11 s12 k2 s21 s22 kicker =
-       k1 /= k2 -- no three or four of a kind
-    && cardKind kicker /= k1 -- no full house
-    && cardKind kicker /= k2 -- no full house
-    && length (nub cards) == 5 -- no duplicate cards
-    ==> isCombination _CTwoPair cards
+propTwoPair :: Property
+propTwoPair = forAll gen (isCombination _CTwoPair)
     where
-        cards = [ Card k1 s11, Card k1 s12
-                , Card k2 s21, Card k2 s22
-                , kicker]
+        gen = do
+            (k1, s11, s12) <- arbitrary
+            (k2, s21, s22) <- arbitrary
+            kicker <- arbitrary
+            let cards = [ Card k1 s11, Card k1 s12
+                        , Card k2 s21, Card k2 s22
+                        , kicker]
+            if  k1 /= k2 -- no three or four of a kind
+             && cardKind kicker /= k1 -- no full house
+             && cardKind kicker /= k2 -- no full house
+             && length (nub cards) == 5 -- no duplicate cards
+                then shuffle cards
+                else discard
 
-propThreeOfAKind
-    :: Kind
-    -> Suit
-    -> Card
-    -> Card
-    -> Property
-propThreeOfAKind kind suit kicker1 kicker2 =
-        length (nub cards) == 5 -- no duplicate cards
-    && cardKind kicker1 /= kind -- no four of a kind
-    && cardKind kicker2 /= kind -- no four of a kind
-    && cardKind kicker1 /= cardKind kicker2 -- no full house
-    ==> isCombination _CThreeOfAKind cards
+propThreeOfAKind :: Property
+propThreeOfAKind = forAll gen (isCombination _CThreeOfAKind)
     where
-        trips = map (Card kind) $ filter (/= suit) [minBound .. maxBound]
-        cards = kicker1 : kicker2 : trips
+        gen = do
+            kind <- arbitrary
+            suit <- arbitrary
+            kicker1 <- arbitrary
+            kicker2 <- arbitrary
+            let trips = map (Card kind) $
+                            filter (/= suit) [minBound .. maxBound]
+            let cards = kicker1 : kicker2 : trips
+            if  length (nub cards) == 5 -- no duplicate cards
+             && cardKind kicker1 /= kind -- no four of a kind
+             && cardKind kicker2 /= kind -- no four of a kind
+             && cardKind kicker1 /= cardKind kicker2 -- no full house
+                then shuffle cards
+                else discard
 
-propLowStraight
-    :: Suit
-    -> Suit
-    -> Suit
-    -> Suit
-    -> Suit
-    -> Property
-propLowStraight s1 s2 s3 s4 s5 =
-        length (nub suits) > 1 -- no flush
-    ==> isCombination _CStraight $
-            map (uncurry Card) $ zip kinds suits
+propLowStraight :: Property
+propLowStraight = forAll gen (isCombination _CStraight)
     where
-        suits = [s1, s2, s3, s4, s5]
-        kinds = Ace : [Two .. Five]
-    
-propStraight
-    :: Kind
-    -> Suit
-    -> Suit
-    -> Suit
-    -> Suit
-    -> Suit
-    -> Property
-propStraight kind s1 s2 s3 s4 s5 =
-        length (nub suits) > 1 -- no flush
-    &&  kind >= Six            -- legal straight
-    ==> isCombination _CStraight $
-            map (uncurry Card) $ zip (enumFromToLeftRel kind 4) suits
-    where
-        suits = [s1, s2, s3, s4, s5]
+        gen = do
+            suits <- replicateM 5 arbitrary
+            let kinds = Ace : [Two .. Five]
+            let cards = map (uncurry Card) $ zip kinds suits
+            if length (nub suits) > 1 -- no flush
+                then shuffle cards
+                else discard
 
-propFlush
-    :: Suit
-    -> Kind
-    -> Kind
-    -> Kind
-    -> Kind
-    -> Kind
-    -> Property
-propFlush suit k1 k2 k3 k4 k5 =
-        length (nub kinds) == 5 -- no duplicate cards
-    &&  notAStraight kinds
-    ==> isCombination _CFlush $
-            map (flip Card suit) kinds
+propStraight :: Property
+propStraight = forAll gen (isCombination _CStraight)
     where
-        kinds = [k1, k2, k3, k4, k5]
+        gen = do
+            kind <- arbitrary
+            suits <- replicateM 5 arbitrary
+            let cards = map (uncurry Card) $
+                            zip (enumFromToLeftRel kind 4) suits
+            if  length (nub suits) > 1 -- no flush
+             && kind >= Six            -- legal straight
+                then shuffle cards
+                else discard
+
+propFlush :: Property
+propFlush = forAll gen (isCombination _CFlush)
+    where
+        gen = do
+            suit <- arbitrary
+            kinds <- replicateM 5 arbitrary
+            let cards = map (flip Card suit) kinds
+            if  length (nub kinds) == 5 -- no duplicate cards
+             && notAStraight kinds
+                then shuffle cards
+                else discard
+
+propFullHouse :: Property
+propFullHouse = forAll gen (isCombination _CFullHouse)
+    where
+        gen = do
+            kind1 <- arbitrary
+            suits1 <- replicateM 3 arbitrary
+            kind2 <- arbitrary
+            suits2 <- replicateM 2 arbitrary
+            let cards = map (Card kind1) suits1 ++ map (Card kind2) suits2
+            if  kind1 /= kind2 -- no four of a kind
+             && length (nub cards) == 5 -- no duplicate cards
+                then shuffle cards
+                else discard
+
+propFourOfAKind :: Property
+propFourOfAKind = forAll gen (isCombination _CFourOfAKind)
+    where
+        gen = do
+            kind <- arbitrary
+            kicker <- arbitrary
+            let cards = kicker : map (Card kind) [minBound .. maxBound]
+            if length (nub cards) == 5
+                then shuffle cards
+                else discard
+
+propStraightFlush :: Property
+propStraightFlush = forAll gen (isCombination _CStraightFlush)
+    where
+        gen = do
+            kind <- arbitrary
+            suit <- arbitrary
+            let cards = map (flip Card suit) $ enumFromToLeftRel kind 4
+            if kind >= Six
+                then shuffle cards
+                else discard
+
+propLowStraightFlush :: Property
+propLowStraightFlush = forAll gen (isCombination _CStraightFlush)
+    where
+        gen = do
+            suit <- arbitrary
+            let kinds = [Ace, Two, Three, Four, Five]
+            let cards = map (flip Card suit) kinds
+            shuffle cards
+
+isCombination :: Prism' Combination a -> [Card] -> Property
+isCombination combination cards =
+    counterexample debug $ has combination combo
+    where
+        hand = fromJust $ asHand cards
+        combo = bestCombination hand
+        debug = show hand ++ " => " ++ show combo
 
 notAStraight
     :: [Kind] -- must be 5 cards
@@ -172,44 +210,3 @@ notAStraight kinds = notHighStraight && notLowStraight
         notHighStraight = sorted /= highStraight
         notLowStraight = sorted /= [Ace, Five, Four, Three, Two]
         highStraight = reverse $ enumFromToLeftRel (head sorted) 4
-
-propFullHouse
-    :: Kind
-    -> Suit
-    -> Kind
-    -> Suit
-    -> Suit
-    -> Property
-propFullHouse k1 s1 k2 s21 s22 =
-        s21 /= s22 -- distinct de-selectors
-    &&  k1 /= k2   -- no four (or five) of a kind
-    ==> isCombination _CFullHouse $
-                (map (Card k1) $ filter (/= s1) [minBound .. maxBound])
-            ++  (map (Card k2) $ filter (/= s21)
-                               $ filter (/= s22) [minBound .. maxBound])
-
-propFourOfAKind
-    :: Kind
-    -> Card
-    -> Property
-propFourOfAKind kind kicker =
-        cardKind kicker /= kind
-    ==> isCombination _CFourOfAKind $
-            kicker : map (Card kind) [minBound .. maxBound]
-
-propStraightFlush
-    :: Kind
-    -> Suit
-    -> Property
-propStraightFlush kind suit =
-        kind >= Six
-    ==> isCombination _CStraightFlush $
-            map (flip Card suit) $ enumFromToLeftRel kind 4
-
-isCombination :: Prism' Combination a -> [Card] -> Property
-isCombination combination cards =
-    counterexample debug $ has combination combo
-    where
-        hand = fromJust $ asHand cards
-        combo = bestCombination hand
-        debug = show hand ++ " => " ++ show combo
