@@ -3,7 +3,7 @@ module TestHands (
 ) where
 
 import Test.Tasty
-import Test.Tasty.HUnit 
+import Test.Tasty.HUnit
 
 import Hands
 import Cards
@@ -11,34 +11,7 @@ import Combinations
 
 tests :: TestTree
 tests = testGroup "hands tests"
-    [ testGroup "histogram" $ map runHistTest histTests
-    , testGroup "five cards" $ map runHandTest handTestsFiveCards
-    ]
-  
-type HistTest = (String, [Card], [(Kind, Int)])
-
-runHistTest :: HistTest -> TestTree
-runHistTest (label, cards, result) =
-  testCase label $
-    result @=? histogram cards
-
-histTests :: [HistTest]
-histTests =
-    [ ("empty", [], [])
-    , ("single", [Card Jack Hearts], [(Jack, 1)])
-    , ( "pair"
-      , [Card Jack Hearts, Card Jack Spades]
-      , [(Jack, 2)]
-      )
-    , ( "pair with kicker"
-      , [ Card King Hearts, Card King Clubs, Card Jack Clubs
-        , Card Ten Diamonds, Card Queen Hearts]
-      , [ (King, 2)
-        , (Queen, 1)
-        , (Jack, 1)
-        , (Ten, 1)
-        ]
-      )
+    [ testGroup "five cards" $ map runHandTest handTestsFiveCards
     ]
 
 type HandTest = (String, Hand -> Maybe Combination, [Card], Maybe Combination)
@@ -51,37 +24,12 @@ runHandTest (label, f, cards, result) =
 
 handTestsFiveCards :: [HandTest]
 handTestsFiveCards =
-    [ ( "Flush"
-      , isFlush
-      , [ Card King Clubs, Card Ten Clubs, Card Eight Clubs                      
-        , Card Ace Clubs, Card Two Clubs
-        ]
-      , Just $ CFlush $ Flush Ace King Ten Eight Two
-      )
-    , ( "Low Straight Flush"
+    [ ( "Low Straight Flush"
       , isStraightFlush
       , [ Card Ace Hearts, Card Two Hearts, Card Four Hearts
         , Card Five Hearts, Card Three Hearts
         ]
       , Just $ CStraightFlush $ StraightFlush Five
-      )
-    , ( "not a Flush"
-      , isFlush
-      , [ Card King Hearts, Card Ten Clubs, Card Eight Clubs
-        , Card Ace Clubs, Card Two Clubs]
-      , Nothing
-      )
-    , ( "Straight"
-      , isStraight
-      , [ Card King Hearts, Card Nine Clubs, Card Jack Clubs
-        , Card Ten Diamonds, Card Queen Hearts]
-      , Just $ CStraight $ Straight King
-      )
-    , ( "Low Straight"
-      , isStraight
-      , [ Card Ace Hearts, Card Three Clubs, Card Two Clubs
-        , Card Five Diamonds, Card Four Hearts]
-      , Just $ CStraight $ Straight Five
       )
     , ( "not a Straight"
       , isStraight
@@ -132,12 +80,6 @@ handTestsFiveCards =
       , [ Card King Hearts, Card King Clubs, Card Jack Clubs
         , Card King Diamonds, Card Queen Hearts]
       , Just $ CThreeOfAKind $ ThreeOfAKind King Queen Jack
-      )
-    , ( "FullHouse"
-      , isFullHouse
-      , [ Card King Hearts, Card King Clubs, Card Jack Clubs
-        , Card King Diamonds, Card Jack Hearts]
-      , Just $ CFullHouse $ FullHouse King Jack
       )
     , ( "Four of a Kind"
       , isFourOfAKind

@@ -39,7 +39,7 @@ rank c = case c of
     CFourOfAKind   _ -> 7
     CStraightFlush _ -> 8
 
-data HighCard = HighCard -- | ordered by rank of kind
+data HighCard = HighCard -- ordered by rank of kind
     { highCard1 :: Kind
     , highCard2 :: Kind
     , highCard3 :: Kind
@@ -48,7 +48,7 @@ data HighCard = HighCard -- | ordered by rank of kind
     }
     deriving (Show, Eq, Ord)
 
-data Pair = Pair -- | ordered by rank of kind
+data Pair = Pair -- ordered by rank of kind
     { pairKind    :: Kind
     , pairKicker1 :: Kind
     , pairKicker2 :: Kind
@@ -56,14 +56,14 @@ data Pair = Pair -- | ordered by rank of kind
     }
     deriving (Show, Eq, Ord)
 
-data TwoPair = TwoPair -- | ordered by rank of kind
+data TwoPair = TwoPair -- ordered by rank of kind
     { twoPairHighPair :: Kind
     , twoPairLowPair  :: Kind
     , twoPairKicker   :: Kind
     }
     deriving (Show, Eq, Ord)
 
-data ThreeOfAKind = ThreeOfAKind -- | ordered by rank of kind
+data ThreeOfAKind = ThreeOfAKind -- ordered by rank of kind
     { threeOfAKindKind    :: Kind
     , threeOfAKindKicker1 :: Kind
     , threeOfAKindKicker2 :: Kind
@@ -71,11 +71,11 @@ data ThreeOfAKind = ThreeOfAKind -- | ordered by rank of kind
     deriving (Show, Eq, Ord)
 
 data Straight = Straight
-    { straightKind :: Kind -- | hightest card
+    { straightKind :: Kind -- hightest card
     }
     deriving (Show, Eq, Ord)
 
-data Flush = Flush -- | ordered by rank of kind
+data Flush = Flush -- ordered by rank of kind
     { flush1 :: Kind
     , flush2 :: Kind
     , flush3 :: Kind
@@ -97,7 +97,7 @@ data FourOfAKind = FourOfAKind
     deriving (Show, Eq, Ord)
 
 data StraightFlush = StraightFlush
-    { straightFlushKind :: Kind -- | highest card
+    { straightFlushKind :: Kind -- highest card
     }
     deriving (Show, Eq, Ord)
 

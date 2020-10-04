@@ -7,7 +7,7 @@ import Test.DocTest (doctest)
 
 main :: IO ()
 main = do
-    doctest ["-isrc", "src/Cards.hs"]
+    doctest ["-isrc", "src/Cards.hs", "src/Hands.hs"]
     defaultMain $ testGroup "holdem tests"
         [ TestCombinations.tests
         , TestHands.tests
