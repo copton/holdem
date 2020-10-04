@@ -71,4 +71,5 @@ test-suite holdem-test
     , tasty-quickcheck == 0.10.*
     , QuickCheck == 2.13.*
     , lens == 4.18.*
+    , doctest == 0.16.*
   default-language: Haskell2010
