@@ -90,6 +90,14 @@ Example with 7 cards
     Just (CStraightFlush (StraightFlush King))
 :}
 True
+
+Negative example with 5 cards
+
+>>> :{
+    isStraightFlush (Hand [ Card King Hearts, Card Nine Clubs, Card Jack Clubs
+                          , Card Ten Diamonds, Card Queen Hearts])
+:}
+Nothing
 -}
 isStraightFlush hand = fmap CStraightFlush $
     getFirst $ mconcat $ map isStraightWith [minBound .. maxBound]
@@ -102,6 +110,37 @@ isStraightFlush hand = fmap CStraightFlush $
 
         promote (CStraight (Straight kind)) = StraightFlush kind
 
+{- | Test if hand is a `FourOfAKind`
+
+Example with 5 cards
+
+>>> :{
+    isFourOfAKind (Hand [ Card King Hearts, Card King Clubs, Card Jack Clubs
+                        , Card King Diamonds, Card King Spades])
+ ==
+    Just (CFourOfAKind (FourOfAKind King Jack))
+:}
+True
+
+Example with 7 cards
+
+>>> :{
+    isFourOfAKind (Hand [ Card King Hearts, Card King Clubs, Card Jack Clubs
+                        , Card Queen Diamonds, Card Two Hearts
+                        , Card King Diamonds, Card King Spades])
+ ==
+    Just (CFourOfAKind (FourOfAKind King Queen))
+:}
+True
+
+Negative example with 5 cards
+
+>>> :{
+    isFourOfAKind (Hand [ Card King Hearts, Card King Clubs, Card Jack Clubs
+                        , Card Queen Diamonds, Card King Spades])
+:}
+Nothing
+-}
 isFourOfAKind (Hand cards) = fmap CFourOfAKind $
     case kindHistogram cards of
         ((kind, 4) : (kicker, _) : _)
@@ -220,6 +259,14 @@ Example with 7 cards and low `Ace`
      Just (CStraight (Straight Five))
 :}
 True
+
+Negative Example with 5 cards
+
+>>> :{
+    isStraight (Hand [ Card Ace Hearts, Card Nine Clubs, Card Jack Clubs
+                     , Card Ten Diamonds, Card Queen Hearts])
+:}
+Nothing
 -}
 isStraight hand = fmap CStraight $
     case findInfix [1,1,1,1] gps of
@@ -234,34 +281,132 @@ isStraight hand = fmap CStraight $
         kinds = Set.toDescList kindsSet
         gps = gaps kinds
 
-{-
-    let
-    case reverse (sort kinds) of
-        (Ace : high : rest)
-            | (high : rest) `isPrefixOf` (reverse [Two .. Five])
-            -> Just $ Straight high
-        (high : rest)
-            | high >= Six && (high : rest) `isPrefixOf ` (expected high)
-            -> Just $ Straight high
-        _   -> Nothing
-    where
-        kinds = reverse $ sort $ map cardKind (getHand hand)
-        gps = gaps kinds
-        highIndex = findInfix [1, 1, 1, 1] gps
-        -}
+{- | Test if hand is `ThreeOfAKind`
 
+Example with 5 cards
+
+>>> :{
+    isThreeOfAKind (Hand [ Card King Hearts, Card King Clubs, Card Jack Clubs
+                         , Card King Diamonds, Card Queen Hearts])
+ ==
+    Just (CThreeOfAKind (ThreeOfAKind King Queen Jack))
+:}
+True
+
+Example with 7 cards
+
+>>> :{
+    isThreeOfAKind (Hand [ Card King Hearts, Card King Clubs, Card Jack Clubs
+                         , Card Two Clubs, Card Four Diamonds
+                         , Card King Diamonds, Card Queen Hearts])
+ ==
+    Just (CThreeOfAKind (ThreeOfAKind King Queen Jack))
+:}
+True
+
+FullHouse is not Three of a Kind
+
+>>> :{
+    isThreeOfAKind (Hand [ Card King Hearts, Card King Clubs, Card Jack Clubs
+                         , Card King Diamonds, Card Jack Hearts])
+:}
+Nothing
+
+For of a Kind is not Three of a Kind
+
+>>> :{
+    isThreeOfAKind (Hand [ Card King Hearts, Card King Clubs, Card Jack Clubs
+                         , Card King Diamonds, Card King Spades])
+:}
+Nothing
+-}
 isThreeOfAKind (Hand cards) = fmap CThreeOfAKind $
     case kindHistogram cards of
         ((kind, 3) : (kicker1, 1) : (kicker2, 1) : _)
             -> Just $ ThreeOfAKind kind kicker1 kicker2
         _   -> Nothing
 
+{- | Test if a hand is a `TwoPair`
+
+Example with 5 cards
+
+>>> :{
+    isTwoPair (Hand [ Card King Hearts, Card King Clubs, Card Jack Clubs
+                    , Card Jack Diamonds, Card Queen Hearts])
+ ==
+    Just (CTwoPair (TwoPair King Jack Queen))
+:}
+True
+
+Example with 7 cards
+
+>>> :{
+    isTwoPair (Hand [ Card King Hearts, Card King Clubs, Card Jack Clubs
+                    , Card Two Hearts, Card Three Diamonds
+                    , Card Jack Diamonds, Card Queen Hearts])
+ ==
+    Just (CTwoPair (TwoPair King Jack Queen))
+:}
+True
+
+Negative example with 5 cards
+
+>>> :{
+    isTwoPair (Hand [ Card Two Hearts, Card King Clubs, Card Jack Clubs
+                    , Card Three Diamonds, Card Queen Hearts])
+:}
+Nothing
+-}
 isTwoPair (Hand cards)= fmap CTwoPair $
     case kindHistogram cards of
         ((kind1, 2) : (kind2, 2) : (kicker, _) : _)
             -> Just $ TwoPair kind1 kind2 kicker
         _   -> Nothing
 
+{- | Test if hand is a `Pair`
+
+Example with 5 cards
+
+>>> :{
+    isPair (Hand [ Card King Hearts, Card King Clubs, Card Jack Clubs
+                 , Card Ten Diamonds, Card Queen Hearts])
+ ==
+      Just (CPair (Pair King Queen Jack Ten))
+:}
+True
+
+Two Pair is not Pair
+
+>>> :{
+    isPair (Hand [ Card King Hearts, Card King Clubs, Card Jack Clubs
+                 , Card Jack Diamonds, Card Queen Hearts])
+:}
+Nothing
+
+Three of a Kind is not Pair
+
+>>> :{
+    isPair (Hand [ Card King Hearts, Card King Clubs, Card Jack Clubs
+                 , Card King Diamonds, Card Queen Hearts])
+:}
+Nothing
+
+FullHouse is not Pair
+
+>>> :{
+    isPair (Hand [ Card King Hearts, Card King Clubs, Card Jack Clubs
+                 , Card King Diamonds, Card Jack Hearts])
+:}
+Nothing
+
+For of a Kind is not Pair
+
+>>> :{
+    isPair (Hand [ Card King Hearts, Card King Clubs, Card Jack Clubs
+                 , Card King Diamonds, Card King Spades])
+:}
+Nothing
+-}
 isPair (Hand cards) = fmap CPair $
     case kindHistogram cards of
         ((kind, 2) : (kicker1, 1) : (kicker2, 1) : (kicker3, 1) : _)

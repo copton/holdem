@@ -56,7 +56,6 @@ test-suite holdem-test
   type: exitcode-stdio-1.0
   main-is: Spec.hs
   other-modules:
-      TestHands
       TestCombinations
       QuickPropHands
       Paths_holdem
