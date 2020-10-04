@@ -58,10 +58,49 @@ isStraightFlush, isFourOfAKind, isFullHouse, isFlush
                , isStraight, isThreeOfAKind, isTwoPair , isPair
                :: Hand -> Maybe Combination
 
-isStraightFlush hand = do
-    (CStraight straight) <- isStraight hand
-    isFlush hand --- borken with 7 cards, flush can be made of non-straight cards
-    return $ CStraightFlush $ StraightFlush $ straightKind straight
+{- | Test if a hand is a `StraightFlush`
+
+Example with 5 cards
+
+>>> :{
+    isStraightFlush (Hand [ Card King Clubs, Card Nine Clubs, Card Jack Clubs
+                          , Card Ten Clubs, Card Queen Clubs])
+ ==
+    Just (CStraightFlush (StraightFlush King))
+:}
+True
+
+Example with 5 cards and low Ace
+
+>>> :{
+    isStraightFlush (Hand [ Card Ace Hearts, Card Two Hearts, Card Four Hearts
+                          , Card Five Hearts, Card Three Hearts])
+ ==
+    Just (CStraightFlush (StraightFlush Five))
+:}
+True
+
+Example with 7 cards
+
+>>> :{
+    isStraightFlush (Hand [ Card King Clubs, Card Nine Clubs, Card Jack Clubs
+                          , Card King Diamonds, Card Two Clubs
+                          , Card Ten Clubs, Card Queen Clubs])
+ ==
+    Just (CStraightFlush (StraightFlush King))
+:}
+True
+-}
+isStraightFlush hand = fmap CStraightFlush $
+    getFirst $ mconcat $ map isStraightWith [minBound .. maxBound]
+    where
+        isStraightWith :: Suit -> First StraightFlush
+        isStraightWith suit = First $ do
+            hand' <- asHand $ filter ((==suit) . cardSuit) $ getHand hand
+            combo <- isStraight hand'
+            return $ promote combo
+
+        promote (CStraight (Straight kind)) = StraightFlush kind
 
 isFourOfAKind (Hand cards) = fmap CFourOfAKind $
     case kindHistogram cards of

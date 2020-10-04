@@ -24,24 +24,11 @@ runHandTest (label, f, cards, result) =
 
 handTestsFiveCards :: [HandTest]
 handTestsFiveCards =
-    [ ( "Low Straight Flush"
-      , isStraightFlush
-      , [ Card Ace Hearts, Card Two Hearts, Card Four Hearts
-        , Card Five Hearts, Card Three Hearts
-        ]
-      , Just $ CStraightFlush $ StraightFlush Five
-      )
-    , ( "not a Straight"
+    [ ( "not a Straight"
       , isStraight
       , [ Card Ace Hearts, Card Nine Clubs, Card Jack Clubs
         , Card Ten Diamonds, Card Queen Hearts]
       , Nothing
-      )
-    , ( "Straight Flush"
-      , isStraightFlush
-      , [ Card King Clubs, Card Nine Clubs, Card Jack Clubs
-        , Card Ten Clubs, Card Queen Clubs]
-      , Just $ CStraightFlush $ StraightFlush King
       )
     , ( "Straight 2"
       , isStraight
