@@ -1,4 +1,13 @@
-module Showdown where
+module Showdown (
+      stats
+    , showdown
+    , evalGame
+    , Game(..)
+    , FinishedGame(..)
+    , Stats(..)
+    , Outcome(..)
+)
+where
 
 import qualified Data.Set as S
 import Data.Maybe (fromJust, isJust)
@@ -14,17 +23,17 @@ newtype Pocket = Pocket {getPocket :: [Card]}
 newtype Community = Community {getCommunity :: [Card]}
     deriving Show
 
-data Status = Win | Loose | Split
+data Outcome = Win | Loose | Split
     deriving (Eq, Show)
 
-instance Semigroup Status where
+instance Semigroup Outcome where
     Loose <> _     = Loose
     _     <> Loose = Loose
-    Split <> _     = Split
-    _     <> Split = Split
+    Split <> Win   = Split
+    Win   <> Split = Split
     Win   <> Win   = Win
 
-instance Monoid Status where
+instance Monoid Outcome where
     mempty = Win
 
 data Stats = Stats
@@ -34,7 +43,28 @@ data Stats = Stats
     }
     deriving Show
 
-stats :: [Status] -> Stats
+{- | A Game with some cards on the table.
+
+properties:
+ * length gamePockets `elem` [0 .. gamePlayers]
+ * all (map ((`elem` [0,1]) . length) gamePockets)
+ * length gameCommunity `elem` [0..5]
+-}
+data Game = Game
+    { gamePlayers :: Int
+    , gamePockets :: [[Card]]
+    , gameCommunity :: [Card]
+    }
+    deriving (Show, Eq)
+
+{- | A Game with all cards on the table
+
+That is two pocket cards per player and 5 community cards
+-}
+newtype FinishedGame = FinishedGame {getGame :: Game}
+    deriving (Eq)
+
+stats :: [Outcome] -> Stats
 stats results =
     Stats (percent win) (percent loose) (percent split)
     where
@@ -46,28 +76,6 @@ stats results =
         classify Split (t, w, l, s) = (t + 1, w, l, s + 1)
 
         percent x = (x * 100) `div` total
-
-{- | A Game with some cards on the table.
-
-properties:
- * length gamePockets `elem` [0 .. 2*gamePlayers]
- * all (map (`elem` [0,1]) gamePockets)
- * length gameCommunity `elem` [0..5]
--}
-
-data Game = Game
-    { gamePlayers :: Int
-    , gamePockets :: [[Card]]
-    , gameCommunity :: [Card]
-    }
-    deriving (Eq)
-
-{- | A Game with all cards on the table
-
-That is two pocket cards per player and 5 community cards
--}
-newtype FinishedGame = FinishedGame {getGame :: Game}
-    deriving (Eq)
 
 {- | Flatten a game into a list of dealt and undealt cards.
 
@@ -136,7 +144,7 @@ construct n cards
     where
         (pockets, community) = splitAt (2 * n) cards
 
-{- | Evaluate a Game from the perspective of the first player.
+{- | Evaluate a FinishedGame from the perspective of the first player.
 
 >>> :{
     evalGame (FinishedGame (Game 2
@@ -149,7 +157,7 @@ construct n cards
 :}
 Win
 -}
-evalGame :: FinishedGame -> Status
+evalGame :: FinishedGame -> Outcome
 evalGame (FinishedGame (Game n ps cs))
     | n == 0 = Split
     | n == 1 = Win
@@ -160,12 +168,12 @@ evalGame (FinishedGame (Game n ps cs))
 
         against theirPocket =
             let theirHand = fromJust $ asHand $ theirPocket ++ cs in
-            status myHand theirHand
+            outcome myHand theirHand
 
-{- | Determine the game status between the player and one opponent.
+{- | Determine the game Outcome between the player and one opponent.
 
 >>> :{
-    status
+    outcome
         (fromJust (asHand
             [ Card Ace Spades, Card Ace Clubs
             , Card Ace Hearts, Card Ace Diamonds
@@ -177,8 +185,8 @@ evalGame (FinishedGame (Game n ps cs))
 :}
 Win
 -}
-status :: Hand -> Hand -> Status
-status myHand theirHand =
+outcome :: Hand -> Hand -> Outcome
+outcome myHand theirHand =
     case compare myCombo theirCombo of
         LT -> Loose
         EQ -> Split
@@ -187,8 +195,11 @@ status myHand theirHand =
         myCombo = bestCombination myHand
         theirCombo = bestCombination theirHand
 
-showdown :: Game -> [(Status, FinishedGame)]
-showdown game = map (\g -> (evalGame g, g)) possibleGames
+{- | Explore all possible ways a game could end.
+
+-}
+showdown :: Game -> [FinishedGame]
+showdown game = possibleGames
     where
         withMissingCards = deconstruct game
         dealtCards = map fromJust $ filter isJust withMissingCards
