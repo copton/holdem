@@ -6,7 +6,7 @@ import Test.DocTest (doctest)
 
 main :: IO ()
 main = do
-    doctest ["-isrc", "src/Cards.hs", "src/Hands.hs"]
+    doctest ["-isrc", "src/Cards.hs", "src/Hands.hs", "src/Draw.hs"]
     defaultMain $ testGroup "holdem tests"
         [ TestCombinations.tests
         , QuickPropHands.tests

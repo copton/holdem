@@ -36,6 +36,11 @@ data Card = Card
     , cardSuit :: Suit
     } deriving (Show, Eq)
 
+instance Ord Card where
+    compare (Card k1 s1) (Card k2 s2) =
+        (fromEnum k1, fromEnum s1) `compare` (fromEnum k2, fromEnum s2)
+
+
 -- | Enumerate all cards, first by kind then by suit
 --
 -- Examples:
