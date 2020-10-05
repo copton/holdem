@@ -6,11 +6,16 @@ import Cards
 import Showdown
 
 games :: [Game]
-games = [
-    Game 2 [[Card Ace Spades, Card Ace Clubs]]
-    [ Card Two Hearts, Card Three Hearts, Card King Spades
-    , Card Queen Diamonds, Card Seven Clubs
-    ]
+games =
+    [ Game 2 [[Card Ace Spades, Card Ace Clubs]]
+        [ Card Two Hearts, Card Three Hearts, Card King Spades
+        , Card Queen Diamonds, Card Seven Clubs
+        ]
+    , Game 2
+        [ [Card Ace Spades, Card Ace Clubs]
+        , [Card Seven Hearts, Card Eight Hearts]
+        ]
+      []
     ]
 
 printGameStats :: IO ()
@@ -33,4 +38,5 @@ printNonWinningGames = forM_ games $ \game -> do
     print "---"
 
 main :: IO ()
-main = printNonWinningGames
+main = --printNonWinningGames
+    printGameStats
