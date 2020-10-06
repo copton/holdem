@@ -16,12 +16,12 @@ module Hands (
 import qualified Data.Set as Set
 import Data.Maybe (fromMaybe)
 import Data.Monoid (First(First, getFirst))
-import Data.List (sort, sortBy, isPrefixOf, tails)
+import Data.List (sortOn, sortBy, isPrefixOf, tails)
 import qualified Data.IntMap as IM
+import Data.Ord (Down(Down))
 
 import Combinations
 import Cards
-import EnumExtra
 
 newtype Hand = Hand { getHand :: [Card] }
     deriving Show
@@ -51,6 +51,7 @@ bestCombination hand = bestCombo `orElse` highCard
         highCard = case map cardKind (getHand hand) of
             (kind1 : kind2 : kind3 : kind4 : kind5 : _)
                 -> CHighCard $ HighCard kind1 kind2 kind3 kind4 kind5
+            _ -> error "hand will less than 5 cards"
 
         orElse = flip fromMaybe
 
@@ -109,6 +110,7 @@ isStraightFlush hand = fmap CStraightFlush $
             return $ promote combo
 
         promote (CStraight (Straight kind)) = StraightFlush kind
+        promote _ = error "can only promote straights"
 
 {- | Test if hand is a `FourOfAKind`
 
@@ -211,7 +213,7 @@ isFlush (Hand cards) = fmap CFlush $
     case suitHistogram cards of
         ((suit, n) : _) | n >= 5 ->
             let flushCards = filter ((==suit) . cardSuit) cards
-                kinds = reverse $ sort $ map cardKind flushCards
+                kinds = sortOn Down $ map cardKind flushCards
                 (kind1 : kind2 : kind3 : kind4 : kind5 : _) = kinds
             in Just $ Flush kind1 kind2 kind3 kind4 kind5
         _ -> Nothing
@@ -432,12 +434,12 @@ sorted by occurence then by kind.
 [(King,2),(Jack,1)]
 -}
 kindHistogram :: [Card] -> [(Kind, Int)]
-kindHistogram = map toEnum' . reverse . sortBy countThenKind
-                        . IM.toList . (foldr go IM.empty)
+kindHistogram = map toEnum' . sortBy countThenKindReverse
+                        . IM.toList . foldr go IM.empty
     where
         toEnum' (kind, count) = (toEnum kind, count)
-        countThenKind (k1, c1) (k2, c2) = compare (c1, k1) (c2, k2)
-        go (Card kind _) hist = IM.insertWith (+) (fromEnum kind) 1 hist
+        countThenKindReverse (k1, c1) (k2, c2) = compare (c2, k2) (c1, k1)
+        go (Card kind _) = IM.insertWith (+) (fromEnum kind) 1
 
 {- | Histogram over the suits of a list of cards
 
@@ -457,12 +459,12 @@ sorted by occurence then by suit.
 [(Clubs,2),(Hearts,1)]
 -}
 suitHistogram :: [Card] -> [(Suit, Int)]
-suitHistogram = map toEnum' . reverse . sortBy countThenSuit
-                       . IM.toList . (foldr go IM.empty)
+suitHistogram = map toEnum' . sortBy countThenSuitReverse
+                       . IM.toList . foldr go IM.empty
     where
         toEnum' (suit, count) = (toEnum suit, count)
-        countThenSuit (s1, c1) (s2, c2) = compare (c1, s1) (c2, s2)
-        go (Card _ suit) hist = IM.insertWith (+) (fromEnum suit) 1 hist
+        countThenSuitReverse (s1, c1) (s2, c2) = compare (c2, s2) (c1, s1)
+        go (Card _ suit) = IM.insertWith (+) (fromEnum suit) 1
 
 {- | Analyse the gaps between a list of descendingly sorted Kinds
 

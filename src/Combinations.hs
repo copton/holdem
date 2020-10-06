@@ -1,4 +1,3 @@
-{-# LANGUAGE DeriveFunctor #-}
 module Combinations (
     Combination(..)
   , HighCard(..)
@@ -13,7 +12,6 @@ module Combinations (
 ) where
 
 import Cards
-import Data.List (sort)
 
 data Combination
     = CHighCard HighCard
@@ -70,6 +68,7 @@ data ThreeOfAKind = ThreeOfAKind -- ordered by rank of kind
     }
     deriving (Show, Eq, Ord)
 
+{- HLINT ignore Straight -}
 data Straight = Straight
     { straightKind :: Kind -- hightest card
     }
@@ -96,6 +95,7 @@ data FourOfAKind = FourOfAKind
     }
     deriving (Show, Eq, Ord)
 
+{- HLINT ignore StraightFlush -}
 data StraightFlush = StraightFlush
     { straightFlushKind :: Kind -- highest card
     }

@@ -1,20 +1,21 @@
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE RankNTypes #-}
+{-# OPTIONS_GHC -Wno-orphans #-}
 module QuickPropHands (
     tests
 ) where
 
 import Test.Tasty (TestTree, testGroup)
 import Test.Tasty.QuickCheck (testProperty)
-import Test.QuickCheck ( (==>), Property, Arbitrary(arbitrary)
+import Test.QuickCheck ( Property, Arbitrary(arbitrary)
                        , arbitraryBoundedEnum, applyArbitrary2
-                       , counterexample, Gen, discard, forAll, shuffle)
+                       , counterexample, discard, forAll, shuffle)
 import Data.Maybe (fromJust)
 import Control.Lens (makePrisms, has, Prism')
-import Data.List (nub, sort)
-import Control.Monad (replicateM, unless)
-import Debug.Trace (trace)
+import Data.List (nub, sortOn)
+import Control.Monad (replicateM)
+import Data.Ord (Down(Down))
 
 import Cards
 import Hands
@@ -57,7 +58,7 @@ propHighCard = forAll gen (isCombination _CHighCard)
             if   (length (nub cards) == 5) -- no duplicate cards
               && (length (nub suits) > 1)  -- no flush
               && (length (nub kinds) == 5) -- no pair, three or four of a kind
-              && (notAStraight kinds)
+              && notAStraight kinds
                 then shuffle cards
                 else discard
 
@@ -69,10 +70,10 @@ propPair = forAll gen (isCombination _CPair)
             suits <- replicateM 2 arbitrary
             kickers <- replicateM 3 arbitrary
             let cards = map (Card kind) suits ++ kickers
-            let suits = map cardSuit cards
+            let suits' = map cardSuit cards
             let kinds = map cardKind cards
             if  length (nub cards) == 5 -- no duplicate cards
-             && length (nub suits) > 1  -- no flush
+             && length (nub suits') > 1  -- no flush
              && length (nub kinds) >= 4  -- nothing higher than a pair
                 then shuffle cards
                 else discard
@@ -118,7 +119,7 @@ propLowStraight = forAll gen (isCombination _CStraight)
         gen = do
             suits <- replicateM 5 arbitrary
             let kinds = Ace : [Two .. Five]
-            let cards = map (uncurry Card) $ zip kinds suits
+            let cards = zipWith Card kinds suits
             if length (nub suits) > 1 -- no flush
                 then shuffle cards
                 else discard
@@ -129,8 +130,7 @@ propStraight = forAll gen (isCombination _CStraight)
         gen = do
             kind <- arbitrary
             suits <- replicateM 5 arbitrary
-            let cards = map (uncurry Card) $
-                            zip (enumFromToLeftRel kind 4) suits
+            let cards = zipWith Card (enumFromToLeftRel kind 4) suits
             if  length (nub suits) > 1 -- no flush
              && kind >= Six            -- legal straight
                 then shuffle cards
@@ -206,7 +206,7 @@ notAStraight
     -> Bool
 notAStraight kinds = notHighStraight && notLowStraight
     where
-        sorted = reverse $ sort kinds
+        sorted = sortOn Down kinds
         notHighStraight = sorted /= highStraight
         notLowStraight = sorted /= [Ace, Five, Four, Three, Two]
         highStraight = reverse $ enumFromToLeftRel (head sorted) 4

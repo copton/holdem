@@ -1,10 +1,10 @@
 name:                holdem
 version:             0.1.0.0
-github:              "githubuser/holdem"
+github:              "copton/holdem"
 license:             BSD3
-author:              "Author name here"
-maintainer:          "example@example.com"
-copyright:           "2020 Author name here"
+author:              "Alexander Bernauer"
+maintainer:          "acopton@gmail.com"
+copyright:           "2020 Alexander Bernauer"
 
 extra-source-files:
 - README.md
@@ -21,9 +21,16 @@ description:         Please see the README on GitHub at <https://github.com/gith
 
 dependencies:
 - base >= 4.7 && < 5
+- containers == 0.6.*
+- combinatorial == 0.1.*
+- split == 0.2.*
 
 library:
   source-dirs: src
+
+ghc-options:
+- -Wall
+- -Werror
 
 executables:
   holdem-exe:
@@ -46,3 +53,9 @@ tests:
     - -with-rtsopts=-N
     dependencies:
     - holdem
+    - tasty == 1.2.*
+    - tasty-hunit == 0.10.*
+    - tasty-quickcheck == 0.10.*
+    - QuickCheck == 2.13.*
+    - lens == 4.18.*
+    - doctest == 0.16.*

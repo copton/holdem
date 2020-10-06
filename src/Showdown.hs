@@ -31,7 +31,7 @@ instance Semigroup Outcome where
     _     <> Loose = Loose
     Split <> Win   = Split
     Win   <> Split = Split
-    Win   <> Win   = Win
+    _     <> _     = Win
 
 instance Monoid Outcome where
     mempty = Win
@@ -98,10 +98,10 @@ True
 deconstruct :: Game -> [Maybe Card]
 deconstruct (Game n ps cs) = pockets ++ community
     where
-        community = map Just cs ++ replicate (5 - (length cs)) Nothing
+        community = map Just cs ++ replicate (5 - length cs) Nothing
         allPockets = concat ps
         pockets = map Just allPockets
-               ++ replicate (2 * n - (length allPockets)) Nothing
+               ++ replicate (2 * n - length allPockets) Nothing
 
 {- | Deal missing cards.
 
@@ -116,6 +116,7 @@ deal :: [Maybe Card] -> [Card] -> [Card]
 deal [] [] = []
 deal (Nothing : xs) (y : ys) = y : deal xs ys
 deal (Just x : xs) ys        = x : deal xs ys
+deal _ _ = error "mismatch in number of cards"
 
 {- | Reconstruct a Game for a number of players from a list of completely
      dealt cards.
@@ -223,4 +224,4 @@ fullDeck = S.fromList [minBound .. maxBound]
 50
 -}
 remainingDeck :: [Card] -> [Card]
-remainingDeck dealt = S.toDescList (fullDeck `S.difference` (S.fromList dealt))
+remainingDeck dealt = S.toDescList (fullDeck `S.difference` S.fromList dealt)
